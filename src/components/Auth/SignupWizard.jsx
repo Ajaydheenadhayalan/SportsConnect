@@ -9,7 +9,7 @@ const SignupWizard = ({ onSwitch }) => {
   const [error, setError] = useState('');
   
   // Form States
-  const [info, setInfo] = useState({ fullName: '', username: '', email: '' });
+  const [info, setInfo] = useState({ fullName: '', username: '', email: '', phone: '' });
   const [passwordData, setPasswordData] = useState({ password: '', confirmPassword: '' });
 
   // Validate & Request OTP
@@ -19,7 +19,7 @@ const SignupWizard = ({ onSwitch }) => {
     setError('');
     
     // Basic validation
-    if (!info.fullName || !info.username || !info.email) {
+    if (!info.fullName || !info.username || !info.email || !info.phone) {
         setError("All fields are required");
         setLoading(false);
         return;
@@ -111,6 +111,11 @@ const SignupWizard = ({ onSwitch }) => {
                     onChange={e => setInfo({...info, email: e.target.value})}
                     style={inputStyle} required 
                 />
+                <input 
+                    type="tel" placeholder="Phone Number" value={info.phone}
+                    onChange={e => setInfo({...info, phone: e.target.value})}
+                    style={inputStyle} required 
+                />
                 <button type="submit" style={btnStyle} disabled={loading}>
                     {loading ? 'Sending OTP...' : 'Next'}
                 </button>
@@ -122,7 +127,7 @@ const SignupWizard = ({ onSwitch }) => {
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
                     Enter the code sent to your <strong>Email</strong>
                 </p>
-                <OTPInput length={6} onComplete={handleVerifyOTP} />
+                <OTPInput length={4} onComplete={handleVerifyOTP} />
                 {loading && <p style={{ marginTop: '1rem', color: 'var(--color-primary)' }}>Verifying...</p>}
                 
                 <button 

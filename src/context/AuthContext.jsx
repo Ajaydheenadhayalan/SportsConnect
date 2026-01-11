@@ -67,13 +67,13 @@ export const AuthProvider = ({ children }) => {
     return true;
   };
 
-  // Step 4: Finalize Signup
   const signup = async (userData) => {
     await delay(1500);
     const newUser = {
       ...userData,
       username: userData.username.trim(),
       email: userData.email.trim(),
+      phone: userData.phone?.trim() || '',
       id: Date.now().toString(),
       avatar: 'default',
       joinedAt: new Date().toISOString(),
