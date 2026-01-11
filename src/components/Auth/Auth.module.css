@@ -1,0 +1,9 @@
+.auth-container {
+    padding: 1rem;
+}
+
+@media (min-width: 640px) {
+    .auth-container {
+        padding: 0;
+    }
+}
