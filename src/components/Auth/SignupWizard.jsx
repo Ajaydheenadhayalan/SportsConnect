@@ -4,21 +4,17 @@ import OTPInput from './OTPInput';
 
 const SignupWizard = ({ onSwitch }) => {
   const { requestOTP, verifyOTP, signup, checkUsername } = useAuth();
-  const [step, setStep] = useState(0); // 0: Info, 1: OTP, 2: Password
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Form States
   const [info, setInfo] = useState({ fullName: '', username: '', email: '', phone: '' });
   const [passwordData, setPasswordData] = useState({ password: '', confirmPassword: '' });
 
-  // Validate & Request OTP
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     
-    // Basic validation
     if (!info.fullName || !info.username || !info.email || !info.phone) {
         setError("All fields are required");
         setLoading(false);
@@ -36,7 +32,6 @@ const SignupWizard = ({ onSwitch }) => {
     }
   };
 
-  // Verify OTP
   const handleVerifyOTP = async (otpValue) => {
       setLoading(true);
       setError('');
@@ -50,7 +45,6 @@ const SignupWizard = ({ onSwitch }) => {
       }
   };
 
-  // Create Password & Signup
   const handleSignup = async (e) => {
       e.preventDefault();
       setLoading(true);
@@ -69,7 +63,6 @@ const SignupWizard = ({ onSwitch }) => {
 
       try {
           await signup({ ...info, password: passwordData.password });
-          // AuthContext triggers state change, routing handles redirect
       } catch (err) {
           setError(err.message || "Signup failed");
           setLoading(false);

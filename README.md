@@ -1,58 +1,66 @@
-# SportsConnect 🏟️
+# 🏆 SportsConnect
 
-**SportsConnect** is a modern web application designed to help sports enthusiasts find partners, manage their profiles, and schedule playtimes effortlessly.
+A modern social networking platform connecting sports enthusiasts, players, and teams.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### 🔐 Secure Authentication (Email OTP)
-- **Signup/Login**: Simple and secure access using Email OTP.
-- **Verification**: 6-digit simulated OTP flow for instant verification.
-- **User Session**: Persistent login state handling.
+```bash
+# Install dependencies
+npm install
+cd backend && npm install && cd ..
 
-### 👤 Profile Management
-- **Customizable Profile**: Edit your name, username, and bio.
-- **Avatar Selection**: Choose from a set of sports-themed avatars.
-- **Sports Preferences**: Select your favorite sports (Badminton, Cricket, Football, etc.) to find like-minded players.
-- **Availability**: Set your availability status (Available/Busy) and specific **Preferred Times** (e.g., "6 PM - 9 PM").
+# Configure environment (see DEPLOYMENT.md)
+cp backend/.env.example backend/.env
+# Edit backend/.env with your credentials
 
-### 📍 Interactive Location Picker
-- **Map Integration**: Built with **Leaflet** and **OpenStreetMap**.
-- **Pick on Map**: Click anywhere to set your location.
-- **"Locate Me"**: One-click geolocation to find your current spot instantly.
-- **Reverse Geocoding**: Automatically converts coordinates into a readable address.
+# Run development server
+npm run dev:all
+```
 
-## 🛠️ Tech Stack
+**Frontend:** http://localhost:5173  
+**Backend:** http://localhost:5001
 
-- **Frontend**: React.js (Vite)
-- **Styling**: Vanilla CSS (Variables, Flexbox/Grid) & CSS Modules
-- **Maps**: React-Leaflet & Leaflet
-- **Routing**: React Router DOM (v6)
-- **State Management**: React Context API (AuthContext, ToastContext)
+## 📦 Tech Stack
 
-## 📦 Installation & Setup
+- **Frontend:** React 19, Vite, React Router, Leaflet Maps
+- **Backend:** Node.js, Express, MongoDB, JWT Authentication
+- **Email:** Nodemailer with OTP verification
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/Ajaydheenadhayalan/SportsConnect.git
-    cd SportsConnect
-    ```
+## 🎯 Features
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+- ✅ Email OTP Authentication
+- ✅ User Profile Management
+- ✅ Interactive Location Picker
+- ✅ Sports Preferences & Skills
+- ✅ Admin Dashboard
+- ✅ Responsive Design
 
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
+## 📖 Documentation
 
-## 📱 Usage
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions.
 
-1.  **Sign Up**: Create an account using your email. The system simulates an OTP (check the green toast notification).
-2.  **Edit Profile**: Go to the Dashboard and click the "Edit" icon.
-3.  **Set Location**: Use the Globe icon to pick your location on the map.
-4.  **Save & Explore**: Update your details and see your personalized Profile Card.
+## 🔧 Available Scripts
+
+```bash
+npm run dev          # Start frontend only
+npm run dev:all      # Start both frontend & backend
+npm run build        # Build for production
+npm run preview      # Preview production build
+```
+
+## 🌐 Deployment
+
+Ready for deployment on:
+- **Frontend:** Vercel, Netlify
+- **Backend:** Render, Railway, Heroku
+- **Database:** MongoDB Atlas (Free Tier)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+## 📄 License
+
+MIT
 
 ---
-*Built with ❤️ for sports lovers.*
+
+**Built for the sports community** 🏀⚽🏈

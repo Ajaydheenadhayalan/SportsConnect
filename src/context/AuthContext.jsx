@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { generateOTP, sendEmailOTP } from '../utils/otpService';
+import * as authService from '../services/authService';
 import { useToast } from './ToastContext';
 
 const AuthContext = createContext();
@@ -12,18 +12,33 @@ export const AuthProvider = ({ children }) => {
   const { addToast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Store the real OTP temporarily
-  const [currentOtp, setCurrentOtp] = useState(null);
-  const [pendingUser, setPendingUser] = useState(null); // Store info to verify against
+  // Store pending user info during signup flow
+  const [pendingUser, setPendingUser] = useState(null);
 
   useEffect(() => {
-    // Simulate session check on mount
-    const storedUser = localStorage.getItem('user_session');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    // Check for existing session on mount
+    const initAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('user_session');
+      
+      if (token && storedUser) {
+        try {
+          // Verify token is still valid by fetching current user
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          // Token invalid or expired
+          console.error('Session validation failed:', error);
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_session');
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -31,124 +46,128 @@ export const AuthProvider = ({ children }) => {
   // Request OTP
   const requestOTP = async (email, fullName) => {
     try {
-        const otp = generateOTP();
-        setCurrentOtp(otp); 
-        
-        if (email) {
-            await sendEmailOTP(email, fullName, otp);
-            addToast(`OTP sent to Email: ${email}`, 'success');
-        }
-
-        setPendingUser({ email });
-        return { success: true };
-    } catch (err) {
-        console.error(err);
-        throw new Error("Failed to send verification code.");
+      const response = await authService.requestOTP(email, fullName);
+      
+      // Store pending user info
+      setPendingUser({ email, fullName });
+      
+      addToast(`OTP sent to ${email}`, 'success');
+      
+      // Show dev OTP if available
+      if (response.devOTP) {
+        console.log(`🔐 DEV OTP: ${response.devOTP}`);
+        addToast(`DEV MODE - OTP: ${response.devOTP}`, 'info');
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Request OTP error:', error);
+      throw new Error(error.message || 'Failed to send verification code');
     }
   };
 
   // Verify OTP
   const verifyOTP = async (otpInput) => {
-    await delay(500);
-    if (otpInput === currentOtp || otpInput === '1234') { 
+    try {
+      await delay(300); // Small delay for UX
+      
+      if (!pendingUser) {
+        throw new Error('No pending verification');
+      }
+      
+      await authService.verifyOTP(pendingUser.email, otpInput);
       return { success: true };
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw new Error(error.message || 'Invalid OTP');
     }
-    throw new Error('Invalid OTP');
   };
 
   // Check Username Availability
   const checkUsername = async (username) => {
-    await delay(500);
-    const usersDb = JSON.parse(localStorage.getItem('users_db') || '[]');
-    const cleanUsername = username.trim();
-    if (usersDb.some(u => u.username.toLowerCase() === cleanUsername.toLowerCase())) {
-        throw new Error('Username already taken');
+    try {
+      await delay(300);
+      await authService.checkUsername(username);
+      return true;
+    } catch (error) {
+      console.error('Check username error:', error);
+      throw new Error(error.message || 'Username check failed');
     }
-    return true;
   };
 
+  // Signup
   const signup = async (userData) => {
-    await delay(1500);
-    const newUser = {
-      ...userData,
-      username: userData.username.trim(),
-      email: userData.email.trim(),
-      phone: userData.phone?.trim() || '',
-      id: Date.now().toString(),
-      avatar: 'default',
-      joinedAt: new Date().toISOString(),
-    };
-    
-    // Save to our 'database'
-    const usersDb = JSON.parse(localStorage.getItem('users_db') || '[]');
-    usersDb.push(newUser);
-    localStorage.setItem('users_db', JSON.stringify(usersDb));
-
-    // Create active session
-    localStorage.setItem('user_session', JSON.stringify(newUser));
-    setUser(newUser);
-    setIsAuthenticated(true);
-    return newUser;
-  };
-
-  const login = async (identifier, password) => {
-    await delay(1000);
-    
-    const usersDb = JSON.parse(localStorage.getItem('users_db') || '[]');
-    const cleanIdentifier = identifier.trim().toLowerCase();
-    
-    // Allow login with either username or email
-    const foundUser = usersDb.find(u => 
-        (u.username.toLowerCase() === cleanIdentifier || u.email.toLowerCase() === cleanIdentifier) && 
-        u.password === password
-    );
-    
-    if (foundUser) {
-        // Don't store password in session
-        const { password, ...safeUser } = foundUser;
-        localStorage.setItem('user_session', JSON.stringify(safeUser));
-        setUser(safeUser);
+    try {
+      await delay(500);
+      
+      const response = await authService.signup(userData);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
         setIsAuthenticated(true);
+        setPendingUser(null);
+        
+        addToast('Account created successfully!', 'success');
+        return response.user;
+      }
+      
+      throw new Error('Signup failed');
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw new Error(error.message || 'Failed to create account');
+    }
+  };
+
+  // Login
+  const login = async (identifier, password) => {
+    try {
+      await delay(500);
+      
+      const response = await authService.login(identifier, password);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
+        setIsAuthenticated(true);
+        
+        addToast('Login successful!', 'success');
         return;
+      }
+      
+      throw new Error('Login failed');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Invalid username or password');
     }
-    
-    // Legacy Demo Fallback (Optional, can remove if you want STRICT only)
-    if (identifier === 'demo' && password === 'password') {
-         const demoUser = { name: 'Demo User', username: 'demo', email: 'demo@example.com' };
-         localStorage.setItem('user_session', JSON.stringify(demoUser));
-         setUser(demoUser);
-         setIsAuthenticated(true);
-         return;
-    }
-
-    throw new Error('Invalid username or password');
   };
 
-  // Helper to save user to our mock DB
-  const registerUserToDb = (fullUserData) => {
-      const usersDb = JSON.parse(localStorage.getItem('users_db') || '[]');
-      usersDb.push(fullUserData);
-      localStorage.setItem('users_db', JSON.stringify(usersDb));
-  }
-
-  const logout = () => {
-    localStorage.removeItem('user_session');
-    setUser(null);
-    setIsAuthenticated(false);
+  // Logout
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setPendingUser(null);
+      addToast('Logged out successfully', 'info');
+    }
   };
 
+  // Update Profile
   const updateProfile = async (updates) => {
-    await delay(800);
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-    localStorage.setItem('user_session', JSON.stringify(updatedUser));
-    
-    // Update in DB too
-    const usersDb = JSON.parse(localStorage.getItem('users_db') || '[]');
-    const index = usersDb.findIndex(u => u.username === user.username);
-    if (index !== -1) {
-        usersDb[index] = { ...usersDb[index], ...updates };
-        localStorage.setItem('users_db', JSON.stringify(usersDb));
+    try {
+      await delay(500);
+      
+      const response = await authService.updateProfile(updates);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
+        addToast('Profile updated successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw new Error(error.message || 'Failed to update profile');
     }
   };
 
@@ -162,8 +181,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       requestOTP, 
       verifyOTP, 
-      checkUsername, 
-      registerUserToDb,
+      checkUsername,
       updateProfile 
     }}>
       {!loading && children}

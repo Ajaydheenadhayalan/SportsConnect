@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import AuthPage from './pages/AuthPage';
 import Home from './pages/Home';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -21,7 +23,9 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            {/* Fallback */}
+            
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
